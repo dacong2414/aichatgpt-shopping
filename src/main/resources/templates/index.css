@@ -86,6 +86,7 @@ html,body {
 .right .chat-list {
   height: 100vh;
   overflow-y: auto;
+  padding-bottom: 120px;
 }
 .right .chat-list .chatgtp  {
   background: #444654;
@@ -105,7 +106,7 @@ html,body {
   text-align: center;
 }
 .right .chat-list .item-chat .chat-content {
-  flex: calc(100% - 85px);
+  width: calc(100% - 85px);
   font-size: 16px;
   line-height: 30px;
 }

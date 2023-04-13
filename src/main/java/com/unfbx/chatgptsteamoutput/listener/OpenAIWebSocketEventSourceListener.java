@@ -41,9 +41,9 @@ public class OpenAIWebSocketEventSourceListener extends EventSourceListener {
     @SneakyThrows
     @Override
     public void onEvent(EventSource eventSource, String id, String type, String data) {
-        log.info("OpenAI返回数据：{}", data);
+        //log.info("OpenAI返回数据：{}", data);
         if (data.equals("[DONE]")) {
-            log.info("OpenAI返回数据结束了");
+            //log.info("OpenAI返回数据结束了");
             session.getBasicRemote().sendText("[DONE]");
             return;
         }
