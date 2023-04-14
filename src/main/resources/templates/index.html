@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>aichatgpt国内镜像</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="image/favicon-32x32.png">
+    <title>AI</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="image/AI.jpg">
     <script src="https://cdn.bootcss.com/jquery/3.4.1/jquery.min.js"></script>
     <script src="js/markdown.min.js"></script>
     <title>Title</title>
@@ -22,15 +22,15 @@
         </div>-->
         <div class="left-bottom">
             <div class="item-btn flex">
-              <img src="image/chat-avatar2.png" alt="">
+            <!--  <img src="image/chat-avatar2.png" alt="">-->
                 <span>author@Mr.yang</span>
             </div>
             <div class="item-btn flex">
-                <img src="image/chat-avatar2.png" alt="">
+              <!--  <img src="image/chat-avatar2.png" alt="">-->
                 <span>author@Mr.zhang</span>
             </div>
             <div class="item-btn flex">
-                <img src="image/chat-avatar2.png" alt="">
+               <!-- <img src="image/chat-avatar2.png" alt="">-->
                 <span id="disconnectSSE">close</span>
             </div>
         </div>
@@ -93,7 +93,8 @@
             //注意ws、wss使用不同的端口。我使用自签名的证书测试，
             //无法使用wss，浏览器打开WebSocket时报错
             //ws对应http、wss对应https。
-            socket = new WebSocket("ws://aichatgpt.shopping//websocket/"+uid);
+          /*  socket = new WebSocket("ws://aichatgpt.shopping//websocket/"+uid);*/
+            socket = new WebSocket("ws://localhost//websocket/"+uid);
             //连接打开事件
             socket.onopen = function () {
                 console.log("Socket 已打开");

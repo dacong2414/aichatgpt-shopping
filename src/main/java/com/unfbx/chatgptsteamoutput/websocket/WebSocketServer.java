@@ -13,6 +13,7 @@ import com.unfbx.chatgptsteamoutput.listener.OpenAISSEEventSourceListener;
 import com.unfbx.chatgptsteamoutput.listener.OpenAIWebSocketEventSourceListener;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
@@ -22,6 +23,7 @@ import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -65,8 +67,16 @@ public class WebSocketServer {
     private final static List<Session> SESSIONS = Collections.synchronizedList(new ArrayList<>());
 
 
+    private static ConcurrentHashMap<String, Integer> limitCount = new ConcurrentHashMap();
+
+    private static ConcurrentHashMap<String, String> keyUserMap = new ConcurrentHashMap();
+
+    private static List<String> word=Arrays.asList("嫖娼","赌博","毒品","黄色","宗教","共产党","中国","博彩");
+    @Value("${chatgpt.shopping}")
+    private List<String> shoppingKey;
     /**
      * 建立连接
+     *
      * @param session
      * @param uid
      */
@@ -101,6 +111,7 @@ public class WebSocketServer {
 
     /**
      * 发送错误
+     *
      * @param session
      * @param error
      */
@@ -112,10 +123,31 @@ public class WebSocketServer {
 
     /**
      * 接收到客户端消息
+     *
      * @param msg
      */
     @OnMessage
     public void onMessage(String msg) {
+        //有不当词汇
+        boolean b = word.stream().anyMatch(x -> msg != null && msg.contains(x));
+        if (b){
+            return;
+        }
+        if (msg!=null){
+            String trim = msg.trim();
+            if (trim.contains("sk-fp0Kv28dEJFppR3NellmT3BlbkFJn4Z2v8SJoQFWp")){
+                String valueKeys = keyUserMap.get(this.uid);
+                if (valueKeys==null||valueKeys.equals("")){
+                    keyUserMap.put(this.uid,trim);
+                }
+            }
+        }
+        String valueKeys = keyUserMap.get(this.uid);
+        if (valueKeys==null){
+            if (checkFreeUser()) {
+                return;
+            }
+        }
         log.info("[连接ID:{}] 收到消息:{}", this.uid, msg);
         //接受参数
         OpenAIWebSocketEventSourceListener eventSourceListener = new OpenAIWebSocketEventSourceListener(this.session);
@@ -134,6 +166,26 @@ public class WebSocketServer {
         }
         openAiStreamClient.streamChatCompletion(messages, eventSourceListener);
         LocalCache.CACHE.put(uid, JSONUtil.toJsonStr(messages), LocalCache.TIMEOUT);
+    }
+
+    private boolean checkFreeUser() {
+        Integer count = limitCount.get(this.uid);
+        if (count == null) {
+            count = 1;
+            limitCount.put(this.uid, count);
+        } else {
+            count = count + 1;
+            limitCount.put(this.uid, count);
+        }
+        if (count >10) {
+            try {
+                session.getBasicRemote().sendText("{\"content\": \"抱歉，免费额度已用完\"}");
+                return true;
+            } catch (Exception e) {
+                log.error("发送异常", e);
+            }
+        }
+        return false;
     }
 
 

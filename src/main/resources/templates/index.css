@@ -100,8 +100,8 @@ html,body {
   height: 45px;
   margin-right: 40px;
   border-radius: 4px;
-  /*background: #1bbb99;*/
-  background: rgb(117,169,156);
+  background: #1bbb99;
+  /*background: rgb(117,169,156);*/
   line-height: 45px;
   text-align: center;
 }
