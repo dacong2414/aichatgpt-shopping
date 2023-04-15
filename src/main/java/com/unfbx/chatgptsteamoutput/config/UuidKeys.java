@@ -1,4 +1,4 @@
-package com.unfbx.chatgptsteamoutput;
+package com.unfbx.chatgptsteamoutput.config;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,11 +11,18 @@ public class UuidKeys {
         for (int i = 0; i < 50; i++) {
             UUID uuid = UUID.randomUUID();
             String str = uuid.toString().replace("-","");
-            String keys= "sk-7f4o"+str+"@aichatgpt.shopping";
+            String keys= "sk-fp0Kv28dEJ"+str+"@aichatgptshopping";
             System.out.println(keys);
             list.add(keys);
         }
         String collect = list.stream().collect(Collectors.joining(","));
         System.out.println(collect);
+    }
+  public   static String  getShoppingKey(){
+        UUID uuid = UUID.randomUUID();
+        String str = uuid.toString().replace("-","");
+        String keys= "sk-fp0Kv28dEJ"+str+"@aichatgptshopping";
+        System.out.println(keys);
+        return keys;
     }
 }

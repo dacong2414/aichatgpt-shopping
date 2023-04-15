@@ -1,5 +1,6 @@
 package com.unfbx.chatgptsteamoutput.websocket;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -9,14 +10,20 @@ import com.unfbx.chatgpt.entity.chat.Message;
 import com.unfbx.chatgpt.exception.BaseException;
 import com.unfbx.chatgpt.exception.CommonError;
 import com.unfbx.chatgptsteamoutput.config.LocalCache;
+import com.unfbx.chatgptsteamoutput.entity.Login;
 import com.unfbx.chatgptsteamoutput.listener.OpenAISSEEventSourceListener;
 import com.unfbx.chatgptsteamoutput.listener.OpenAIWebSocketEventSourceListener;
+import com.unfbx.chatgptsteamoutput.seviceImpl.LoginServiceImpl;
+import com.unfbx.chatgptsteamoutput.seviceImpl.OpenaiKeyServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpSession;
 import javax.websocket.*;
 import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
@@ -40,12 +47,31 @@ import java.util.concurrent.CopyOnWriteArraySet;
 @ServerEndpoint("/websocket/{uid}")
 public class WebSocketServer {
 
+
+    private static List<String> shoppingKey;
+
     private static OpenAiStreamClient openAiStreamClient;
+
+    private static LoginServiceImpl loginService;
+
+    private static HttpSession httpSession;
+
 
     @Autowired
     public void setOrderService(OpenAiStreamClient openAiStreamClient) {
         this.openAiStreamClient = openAiStreamClient;
     }
+
+    @Value("${chatgpt.shopping}")
+    public void setShoppingKey(List<String> shoppingKey) {
+        this.shoppingKey = shoppingKey;
+    }
+
+    @Autowired
+    public void setLoginService(LoginServiceImpl loginService) {
+        this.loginService = loginService;
+    }
+
 
     //在线总数
     private static int onlineCount;
@@ -71,9 +97,9 @@ public class WebSocketServer {
 
     private static ConcurrentHashMap<String, String> keyUserMap = new ConcurrentHashMap();
 
-    private static List<String> word=Arrays.asList("嫖娼","赌博","毒品","黄色","宗教","共产党","中国","博彩");
-    @Value("${chatgpt.shopping}")
-    private List<String> shoppingKey;
+    private static List<String> word = Arrays.asList("嫖娼", "赌博", "毒品", "黄色", "宗教", "共产党", "中国", "博彩");
+
+
     /**
      * 建立连接
      *
@@ -81,7 +107,7 @@ public class WebSocketServer {
      * @param uid
      */
     @OnOpen
-    public void onOpen(Session session, @PathParam("uid") String uid) {
+    public void onOpen(Session session, @PathParam("uid") String uid, EndpointConfig config) {
         this.session = session;
         this.uid = uid;
         webSocketSet.add(this);
@@ -93,6 +119,8 @@ public class WebSocketServer {
             webSocketMap.put(uid, this);
             addOnlineCount();
         }
+        //httpSession = (HttpSession) config.getUserProperties().get(HttpSession.class.getName());
+
         log.info("[连接ID:{}] 建立连接, 当前连接数:{}", this.uid, getOnlineCount());
     }
 
@@ -130,20 +158,23 @@ public class WebSocketServer {
     public void onMessage(String msg) {
         //有不当词汇
         boolean b = word.stream().anyMatch(x -> msg != null && msg.contains(x));
-        if (b){
+        if (b) {
             return;
         }
-        if (msg!=null){
+        if (msg != null) {
             String trim = msg.trim();
-            if (trim.contains("sk-fp0Kv28dEJFppR3NellmT3BlbkFJn4Z2v8SJoQFWp")){
-                String valueKeys = keyUserMap.get(this.uid);
-                if (valueKeys==null||valueKeys.equals("")){
-                    keyUserMap.put(this.uid,trim);
+            if (trim.contains("sk-fp0Kv28dEJ")) {
+                Login login = loginService.getLoginBykey(msg);
+                if (ObjectUtil.isNotEmpty(login) && login.getEnableTime() > 0) {
+                    String valueKeys = keyUserMap.get(this.uid);
+                    if (valueKeys == null || valueKeys.equals("")) {
+                        keyUserMap.put(this.uid, trim);
+                    }
                 }
             }
         }
         String valueKeys = keyUserMap.get(this.uid);
-        if (valueKeys==null){
+        if (valueKeys == null) {
             if (checkFreeUser()) {
                 return;
             }
@@ -177,7 +208,7 @@ public class WebSocketServer {
             count = count + 1;
             limitCount.put(this.uid, count);
         }
-        if (count >10) {
+        if (count > 10) {
             try {
                 session.getBasicRemote().sendText("{\"content\": \"抱歉，免费额度已用完\"}");
                 return true;
