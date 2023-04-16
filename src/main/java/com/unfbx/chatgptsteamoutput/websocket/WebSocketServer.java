@@ -10,6 +10,7 @@ import com.unfbx.chatgpt.entity.chat.Message;
 import com.unfbx.chatgpt.exception.BaseException;
 import com.unfbx.chatgpt.exception.CommonError;
 import com.unfbx.chatgptsteamoutput.config.LocalCache;
+import com.unfbx.chatgptsteamoutput.config.RateLimiter;
 import com.unfbx.chatgptsteamoutput.entity.Login;
 import com.unfbx.chatgptsteamoutput.listener.OpenAISSEEventSourceListener;
 import com.unfbx.chatgptsteamoutput.listener.OpenAIWebSocketEventSourceListener;
@@ -29,10 +30,7 @@ import javax.websocket.server.PathParam;
 import javax.websocket.server.ServerEndpoint;
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArraySet;
 
@@ -97,8 +95,9 @@ public class WebSocketServer {
 
     private static ConcurrentHashMap<String, String> keyUserMap = new ConcurrentHashMap();
 
-    private static List<String> word = Arrays.asList("嫖娼", "赌博", "毒品", "黄色", "宗教", "共产党", "中国", "博彩");
+    private static List<String> word = Arrays.asList("嫖娼", "赌博", "毒品", "黄色", "宗教", "共产党", "博彩", "强奸", "政治", "卖淫", "犯罪", "凶杀", "教唆犯罪");
 
+    RateLimiter rateLimiter = new RateLimiter(1000, 3); // 每秒最多处理3个请求
 
     /**
      * 建立连接
@@ -156,9 +155,18 @@ public class WebSocketServer {
      */
     @OnMessage
     public void onMessage(String msg) {
+
+        if (rateLimiter.allowRequest()) {
+            log.info("处理请求");
+        } else {
+            log.info("请求被限流");
+            sendMsg("{\"content\": \"AI很忙，稍后在试试......\"}");
+        }
+
         //有不当词汇
         boolean b = word.stream().anyMatch(x -> msg != null && msg.contains(x));
         if (b) {
+            sendMsg("{\"content\": \"AI很忙,请文明发言，不能讨论敏感话题.....\"}");
             return;
         }
         if (msg != null) {
@@ -199,6 +207,14 @@ public class WebSocketServer {
         LocalCache.CACHE.put(uid, JSONUtil.toJsonStr(messages), LocalCache.TIMEOUT);
     }
 
+    private void sendMsg(String s) {
+        try {
+            session.getBasicRemote().sendText(s);
+        } catch (Exception e) {
+            log.error("发送异常", e);
+        }
+    }
+
     private boolean checkFreeUser() {
         Integer count = limitCount.get(this.uid);
         if (count == null) {
@@ -208,9 +224,9 @@ public class WebSocketServer {
             count = count + 1;
             limitCount.put(this.uid, count);
         }
-        if (count > 10) {
+        if (count > 1000) {
             try {
-                session.getBasicRemote().sendText("{\"content\": \"抱歉，免费额度已用完\"}");
+                session.getBasicRemote().sendText("{\"content\": \"AI很忙,抱歉你访问次数超过1000次，请联系管理员：1025753999@qq.com\"}");
                 return true;
             } catch (Exception e) {
                 log.error("发送异常", e);

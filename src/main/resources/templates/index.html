@@ -23,6 +23,10 @@
         <div class="left-bottom">
             <div class="item-btn flex">
                 <!--  <img src="image/chat-avatar2.png" alt="">-->
+                <span>请文明提问，否则封站</span>
+            </div>
+            <div class="item-btn flex">
+                <!--  <img src="image/chat-avatar2.png" alt="">-->
                 <span>gpt-3.5-turbo-0301</span>
             </div>
             <div class="item-btn flex">
@@ -35,7 +39,8 @@
             </div>
             <div class="item-btn flex">
                <!-- <img src="image/chat-avatar2.png" alt="">-->
-                <span id="disconnectSSE">close</span>
+               <!-- <span id="disconnectSSE">close</span>-->
+                <span>Q:1025753999@qq.com</span>
             </div>
         </div>
     </div>
@@ -97,8 +102,8 @@
             //注意ws、wss使用不同的端口。我使用自签名的证书测试，
             //无法使用wss，浏览器打开WebSocket时报错
             //ws对应http、wss对应https。
-           /* socket = new WebSocket("ws://aichatgpt.shopping//websocket/"+uid);*/
-            socket = new WebSocket("ws://localhost//websocket/"+uid);
+            socket = new WebSocket("ws://aichatgpt.shopping//websocket/"+uid);
+           /* socket = new WebSocket("ws://localhost//websocket/"+uid);*/
             //连接打开事件
             socket.onopen = function () {
                 console.log("Socket 已打开");
@@ -114,7 +119,11 @@
                     text = '';
                     return;
                 }
-                text = text + json_data.content;
+                if(!json_data.content.match("AI很忙")){
+                    text = text + json_data.content;
+                }else {
+                    text = json_data.content;
+                }
                 setText(text, uuid_str)
             };
             //连接关闭事件
