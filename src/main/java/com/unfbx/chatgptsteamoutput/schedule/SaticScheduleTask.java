@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.unfbx.chatgptsteamoutput.entity.Login;
 import com.unfbx.chatgptsteamoutput.seviceImpl.LoginServiceImpl;
+import com.unfbx.chatgptsteamoutput.websocket.WebSocketServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;

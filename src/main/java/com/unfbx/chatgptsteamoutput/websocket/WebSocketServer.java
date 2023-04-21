@@ -93,7 +93,7 @@ public class WebSocketServer {
 
     private static ConcurrentHashMap<String, Integer> limitCount = new ConcurrentHashMap();
 
-    private static ConcurrentHashMap<String, String> keyUserMap = new ConcurrentHashMap();
+    public static ConcurrentHashMap<String, String> keyUserMap = new ConcurrentHashMap();
 
     private static List<String> word = Arrays.asList("嫖娼", "赌博", "毒品", "黄色", "宗教", "共产党", "博彩", "强奸", "政治", "卖淫", "犯罪", "凶杀", "教唆犯罪");
 
@@ -172,11 +172,22 @@ public class WebSocketServer {
         if (msg != null) {
             String trim = msg.trim();
             if (trim.contains("sk-fp0Kv28dEJ")) {
-                Login login = loginService.getLoginBykey(msg);
+                Login login = loginService.getLoginBykey(trim);
                 if (ObjectUtil.isNotEmpty(login) && login.getEnableTime() > 0) {
                     String valueKeys = keyUserMap.get(this.uid);
                     if (valueKeys == null || valueKeys.equals("")) {
+                        String oldKey = "";
+                        for (Map.Entry<String, String> stringUserEntry : keyUserMap.entrySet()) {
+                            if (stringUserEntry.getValue() != null && stringUserEntry.getValue().equals(trim)) {
+                                oldKey = stringUserEntry.getKey();
+                            }
+                        }
+                        if (!oldKey.equals("")) {
+                            keyUserMap.remove(oldKey);
+                        }
+                        sendMsg("{\"content\": \"AI很忙,恭喜你，你的key已启用！！！\"}");
                         keyUserMap.put(this.uid, trim);
+                        return;
                     }
                 }
             }
@@ -224,9 +235,9 @@ public class WebSocketServer {
             count = count + 1;
             limitCount.put(this.uid, count);
         }
-        if (count > 1000) {
+        if (count > 20) {
             try {
-                session.getBasicRemote().sendText("{\"content\": \"AI很忙,抱歉你访问次数超过1000次，请联系管理员：1025753999@qq.com\"}");
+                session.getBasicRemote().sendText("{\"content\": \"AI很忙,抱歉你访问次数超过20次，请联系管理员：v 17782182752\"}");
                 return true;
             } catch (Exception e) {
                 log.error("发送异常", e);
