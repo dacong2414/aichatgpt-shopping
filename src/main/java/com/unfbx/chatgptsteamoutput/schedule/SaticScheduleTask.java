@@ -39,5 +39,7 @@ public class SaticScheduleTask {
             });
             loginService.updateBatchById(list);
         }
+        WebSocketServer.keyUserMap.clear();
+        WebSocketServer.limitCount.clear();
     }
 }

@@ -91,7 +91,7 @@ public class WebSocketServer {
     private final static List<Session> SESSIONS = Collections.synchronizedList(new ArrayList<>());
 
 
-    private static ConcurrentHashMap<String, Integer> limitCount = new ConcurrentHashMap();
+    public static ConcurrentHashMap<String, Integer> limitCount = new ConcurrentHashMap();
 
     public static ConcurrentHashMap<String, String> keyUserMap = new ConcurrentHashMap();
 
@@ -187,6 +187,9 @@ public class WebSocketServer {
                         }
                         sendMsg("{\"content\": \"AI很忙,恭喜你，你的key已启用！！！\"}");
                         keyUserMap.put(this.uid, trim);
+                        return;
+                    }else{
+                        sendMsg("{\"content\": \"AI很忙,恭喜你，你的key已启用！！！\"}");
                         return;
                     }
                 }
