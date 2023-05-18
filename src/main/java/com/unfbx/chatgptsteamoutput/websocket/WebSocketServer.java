@@ -238,9 +238,9 @@ public class WebSocketServer {
             count = count + 1;
             limitCount.put(this.uid, count);
         }
-        if (count > 20) {
+        if (count > 200) {
             try {
-                session.getBasicRemote().sendText("{\"content\": \"AI很忙,抱歉你访问次数超过20次，请联系管理员：v 17782182752\"}");
+                session.getBasicRemote().sendText("{\"content\": \"AI很忙,抱歉你访问次数超过200次，请联系管理员：微信号：dacong-sd-gpt \"}");
                 return true;
             } catch (Exception e) {
                 log.error("发送异常", e);
