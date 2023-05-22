@@ -5,7 +5,7 @@ import java.security.NoSuchAlgorithmException;
 
 public class MD5 {
     public static void main(String[] args) {
-        String password = "password123";
+        String password = "192.168.1.100";
         String hashedPassword = hashPassword(password);
         System.out.println("Hashed Password: " + hashedPassword);
     }

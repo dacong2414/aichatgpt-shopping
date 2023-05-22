@@ -82,7 +82,7 @@ public class ChatController {
         return sseEmitter;
     }
 
-    @GetMapping("")
+    @GetMapping("/index")
     public String index() {
         return "index.html";
     }
