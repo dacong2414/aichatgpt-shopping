@@ -4,12 +4,12 @@ import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.sun.javafx.collections.SetListenerHelper;
-import com.unfbx.chatgptsteamoutput.config.BeanUtil;
-import com.unfbx.chatgptsteamoutput.config.MD5;
+import com.unfbx.chatgptsteamoutput.config.*;
 import com.unfbx.chatgptsteamoutput.dto.GptAccountDTO;
 import com.unfbx.chatgptsteamoutput.entity.GptAccount;
 import com.unfbx.chatgptsteamoutput.seviceImpl.GptAccountServiceImpl;
 import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,8 +29,9 @@ public class AccountController {
     String type3 = "3.5";
     String type4 = "4.0";
 
-    @GetMapping("/get/token")
-    public ResponseEntity<?> getToken(HttpServletRequest request) {
+    @PostMapping("/get/token")
+    @ResponseBody
+    public Result<?> getToken(HttpServletRequest request) {
         String ipAddress = getIpAddress(request);
         String md5 = MD5.hashPassword(ipAddress);
         //校验token 一个token只能领取一个账号
@@ -40,21 +41,21 @@ public class AccountController {
         GptAccount one = gptAccountService.getOne(gptAccountLambdaQueryWrapper);
         //如果有token记录说明已经领取了
         if (ObjectUtil.isNotEmpty(one)) {
-            return ResponseEntity.ok("Sorry, you have already claimed the 3.5 account.");
+            throw  new ServiceException(ErrorCodeEnum.ERROR.getCode(),"Sorry, you have already claimed the 3.5 account.");
         }
         //如果没有，那么要绑定一个账号3.5
         LambdaQueryWrapper<GptAccount> newWrapper = Wrappers.lambdaQuery();
-        newWrapper.eq(GptAccount::getAccountType, type3).last(" and  token is null order by create_time desc limit 1 ");
+        newWrapper.eq(GptAccount::getAccountType, type3).last(" order by create_time desc limit 1 ");
         GptAccount newGptAccount = gptAccountService.getOne(newWrapper);
         //有这个号并且，这个号没有被领取过
-        if (ObjectUtil.isNotEmpty(newGptAccount)) {
+        if (ObjectUtil.isNotEmpty(newGptAccount)&&ObjectUtil.isEmpty(newGptAccount.getToken())) {
             newGptAccount.setUpdateBy(ipAddress);
             newGptAccount.setUpdateTime(new Date());
             newGptAccount.setToken(md5);
             gptAccountService.updateById(newGptAccount);
-            return ResponseEntity.ok(md5);
+            return Result.success(md5);
         }
-        return new ResponseEntity("Sorry, there is no 3.5 account available at the moment. Please contact the administrator.", HttpStatus.INTERNAL_SERVER_ERROR);
+        throw  new ServiceException(ErrorCodeEnum.ERROR.getCode(),"Sorry, there is no 3.5 account available at the moment. Please contact the administrator.");
     }
 
     /**
@@ -63,8 +64,9 @@ public class AccountController {
      * @param token
      * @return
      */
-    @GetMapping("/send/account")
-    public ResponseEntity<GptAccountDTO> sendAccount(@Param("token") String token) {
+    @PostMapping("/send/3.5account")
+    @ResponseBody
+    public Result<GptAccountDTO> sendAccount(@Param("token") String token) {
         //校验token 一个token只能领取一个账号
         LambdaQueryWrapper<GptAccount> gptAccountLambdaQueryWrapper = Wrappers.lambdaQuery();
         gptAccountLambdaQueryWrapper.eq(GptAccount::getToken, token)
@@ -74,9 +76,11 @@ public class AccountController {
             GptAccountDTO conversion = BeanUtil.conversion(one, GptAccountDTO.class);
             conversion.setEmail(null);
             conversion.setEmailPwd(null);
-            return ResponseEntity.ok(conversion);
+            one.setSendFlag(1);//已发送
+            gptAccountService.updateById(one);
+            return Result.success(conversion);
         }
-        return null;
+        throw  new ServiceException(ErrorCodeEnum.ERROR.getCode(),"No matching 3.5 account.");
     }
 
     /**
@@ -85,8 +89,9 @@ public class AccountController {
      * @param
      * @return
      */
-    @GetMapping("/receive/account")
-    public ResponseEntity<?> receiveAccount(@Param("accountName") String accountName, @Param("accountPwd") String accountPwd
+    @PostMapping("/receive/4.0account")
+    @ResponseBody
+    public Result<String> receiveAccount(@Param("accountName") String accountName, @Param("accountPwd") String accountPwd
             , @Param("loginLocation") String loginLocation, @Param("cardNum") String cardNum, @Param("token") String token) {
 
         //根据token查询
@@ -97,16 +102,16 @@ public class AccountController {
         if (ObjectUtil.isNotEmpty(one)) {
             one.setAccountType(type4);
             one.setSalesFlag(0);//0.未出售  1.已出售  这个是4.0的标识是否已经出售
-            one.setVerification(1);//0.已校验是4.0   1.未校验    目前需要人工验证是否是4.0
+            one.setVerification(0);//0.未校验是4.0   1.已校验    目前需要人工验证是否是4.0
             one.setUpdateTime(new Date());
             one.setUpdateBy(token);
             one.setLoginLocation(loginLocation);
             one.setCardNum(cardNum);
             one.setToken(null);//4.0回收过后3.5又可以领取
             gptAccountService.updateById(one);
-            return ResponseEntity.ok("Recycling successful, we will verify the 4.0 account and make payment to you in one hour.");
+            return Result.success("Recycling successful, we will verify the 4.0 account and make payment to you in one hour.");
         }
-        return new ResponseEntity("Recycling failed, no valid account found.. Please contact the administrator.", HttpStatus.INTERNAL_SERVER_ERROR);
+        throw  new ServiceException(ErrorCodeEnum.ERROR.getCode(),"Recycling failed, no valid account found.. Please contact the administrator.");
     }
 
 

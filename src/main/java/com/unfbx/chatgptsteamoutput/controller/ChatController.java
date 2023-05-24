@@ -82,10 +82,10 @@ public class ChatController {
         return sseEmitter;
     }
 
-    @GetMapping("/index")
+   /* @GetMapping("/index")
     public String index() {
         return "index.html";
-    }
+    }*/
 
     @GetMapping("/websocket")
     public String websocket() {
