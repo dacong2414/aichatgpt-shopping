@@ -1,0 +1,218 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+::-webkit-scrollbar {
+ display: none;
+ width: 0 !important;
+ height: 0 !important;
+ -webkit-appearance: none;
+ background: transparent;
+}
+*, ::before, ::after {
+  --tw-border-spacing-x: 0;
+  --tw-border-spacing-y: 0;
+  --tw-translate-x: 0;
+  --tw-translate-y: 0;
+  --tw-rotate: 0;
+  --tw-skew-x: 0;
+  --tw-skew-y: 0;
+  --tw-scale-x: 1;
+  --tw-scale-y: 1;
+  --tw-scroll-snap-strictness: proximity;
+  --tw-ring-offset-width: 0px;
+  --tw-ring-offset-color: #fff;
+  --tw-ring-color: rgba(59,130,246,0.5);
+  --tw-ring-offset-shadow: 0 0 #0000;
+  --tw-ring-shadow: 0 0 #0000;
+  --tw-shadow: 0 0 #0000;
+  --tw-shadow-colored: 0 0 #0000;
+}
+html,body {
+  min-height: 100vh;
+  color: #fff;
+}
+body {
+  background: #000;
+  width: 100%;
+  min-height: 100vh;
+  overflow-x: hidden;
+  font-family: "Font Awesome 5 Free";
+}
+@font-face {
+  font-family: "Font Awesome 5 Free";
+  font-style: normal;
+  font-weight: 900;
+  src: url(../font/fa-solid-900.eot);
+  src: url(../font/fa-solid-900.eot?#iefix) format("embedded-opentype"),url(../font/fa-solid-900.woff2) format("woff2"),url(../font/fa-solid-900.woff) format("woff"),url(../font/fa-solid-900.ttf) format("truetype"),url(../font/fa-solid-900.svg#fontawesome) format("svg")
+}
+.common-button {
+  color: #000;
+  background: rgb(151,232,166);
+  text-decoration: none;
+  padding: 15px 30px;
+  border-radius: 25px;
+  font-size: 20px;
+  font-weight: 600;
+}
+.header {
+  background: rgba(0,0,0,0.9);
+  box-shadow: var(0 0 #0000, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+  height: 100px;
+  line-height: 60px;
+  padding: 20px;
+  font-size: 22px;
+  color: #fff;
+  font-family: "Font Awesome 5 Free";
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 10;
+}
+.video-wrapper {
+  height: 100vh;
+  padding-top: 100px;
+}
+.video-wrapper video{
+  height: 100%;
+  width: 100%;
+}
+.block {
+  margin: 0 auto;
+  max-width: 1280px;
+  display: block;
+}
+.main-wrapper {
+  transform: translateY(-115px);
+}
+.flex {
+  display: flex;
+}
+.flex-start {
+  align-items: flex-start;
+}
+.flex-between {
+  justify-content: space-between;
+}
+.flex-1 {
+  flex: 1;
+}
+.cta-img {
+  width: 38%;
+  max-height: 100%;
+}
+.pl-60 {
+  padding-left: 60px;
+}
+.text-center {
+  text-align: center;
+}
+.block1-title {
+  font-size: 80px;
+  color: #fff;
+  font-weight: bolder;
+}
+.block1-content {
+  margin-top: 45px;
+  color: rgb(89,177,175);
+  font-size: 28px;
+  line-height: 45px;
+  font-weight: 600;
+  margin-bottom: 60px;
+}
+.block2 {
+  margin-top: 80px;
+}
+.block2-title {
+  font-size: 60px;
+  color: rgb(151,232,166);
+  padding-top: 100px;
+  margin-bottom: 50px;
+}
+.block3-title {
+  font-size: 60px;
+  color: #fff;
+  padding-top: 100px;
+  margin-bottom: 50px;
+}
+.block2-content {
+  color: rgb(89,177,175);
+  font-size: 25px;
+  line-height: 40px;
+  font-weight: 600;
+  margin-bottom: 60px;
+}
+.gallery_art {
+  width: 50%;
+  max-height: 100%;
+  border-radius: 50px;
+}
+.get-btn {
+  margin: 0 auto;
+}
+.concat-us {
+  margin-top: 100px;
+  border-top: 1px solid rgba(229,231,235,.5);
+  padding: 100px 0;
+}
+.concat-us .title {
+  font-size: 28px;
+  font-weight: bolder;
+}
+.concat-us .label {
+  font-weight: bolder;
+  font-size: 24px;
+  margin-right: 10px;
+}
+.concat-us .item-concat {
+  font-size: 20px;
+  margin-left: 20px;
+  cursor: pointer;
+  color: rgb(151,232,166);
+  font-weight: bold;
+}
+.concat-us .item-concat:hover {
+  color: #fff;
+}
+
+.modal-body {
+  padding: 30px;
+  color: black;
+}
+.modal-body .item-form {
+  margin-bottom: 20px;
+  height: 50px;
+  line-height: 50px;
+}
+.modal-body .item-form .label {
+  width: 200px;
+  text-align: right;
+  font-weight: bold;
+}
+.modal-body .item-form .label .require {
+  color: red;
+}
+.modal-body .item-form input {
+  margin-left: 30px;
+  width: 300px;
+  height: 45px;
+  line-height: 45px;
+  border-radius: 8px;
+  padding: 10px;
+  border: 1px solid #f5f5f5;
+  outline-color: rgb(151,232,166);
+  font-size: 16px;
+}
+
+.modal-body .common-button {
+  margin-top: 30px;
+  border: none;
+  cursor: pointer;
+}
+.modal-body .error-msg {
+  color: red;
+  text-align: center;
+  margin-top: 10px;
+}

@@ -9,10 +9,10 @@
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
     <groupId>com.unfbx</groupId>
-    <artifactId>chatgpt-steam-output</artifactId>
+    <artifactId>chatgpt-4.0</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>chatgpt-steam-output</name>
-    <description>chatgpt-steam-output</description>
+    <name>chatgpt-4.0</name>
+    <description>chatgpt-4.0</description>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
