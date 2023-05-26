@@ -43,16 +43,11 @@ var utils = {
 
   checkRequired() {
     var accountName = $('.accountName').val(),
-        accountPwd = $('.accountPwd').val(),
         cardNum = $('.cardNum').val(),
         loginLocation = $('.loginLocation').val(),
         ele = $('.error-msg')
     if (!accountName) {
       ele.html("account is required!")
-      return false
-    }
-    if (!accountPwd) {
-      ele.html("Password is required!")
       return false
     }
     if (!cardNum) {
@@ -65,7 +60,7 @@ var utils = {
     }
     ele.html("")
     return {
-      accountName, accountPwd, cardNum, loginLocation
+      accountName, cardNum, loginLocation
     }
   },
 
@@ -75,12 +70,14 @@ var utils = {
       this.token = token
       return
     }
+    var _this = this
     $.ajax({
       url: this.BASE_URL + '/get/token',
       type: 'POST',
       success: function (res) {
         if (res.code == 200) {
-          token = res.data
+          localStorage.setItem("token", res.data)
+          _this.token = res.data
         }
       }
     })

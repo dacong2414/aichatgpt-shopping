@@ -8,6 +8,7 @@ import com.unfbx.chatgptsteamoutput.config.*;
 import com.unfbx.chatgptsteamoutput.dto.GptAccountDTO;
 import com.unfbx.chatgptsteamoutput.entity.GptAccount;
 import com.unfbx.chatgptsteamoutput.seviceImpl.GptAccountServiceImpl;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Update;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import java.util.Date;
 
 @Controller
 @CrossOrigin
+@Slf4j
 public class AccountController {
     @Autowired
     GptAccountServiceImpl gptAccountService;
@@ -34,6 +36,7 @@ public class AccountController {
     public Result<?> getToken(HttpServletRequest request) {
         String ipAddress = getIpAddress(request);
         String md5 = MD5.hashPassword(ipAddress);
+        log.info("ipAddress:{}",ipAddress);
         //校验token 一个token只能领取一个账号
         LambdaQueryWrapper<GptAccount> gptAccountLambdaQueryWrapper = Wrappers.lambdaQuery();
         gptAccountLambdaQueryWrapper.eq(GptAccount::getToken, md5)
@@ -41,21 +44,28 @@ public class AccountController {
         GptAccount one = gptAccountService.getOne(gptAccountLambdaQueryWrapper);
         //如果有token记录说明已经领取了
         if (ObjectUtil.isNotEmpty(one)) {
-            throw  new ServiceException(ErrorCodeEnum.ERROR.getCode(),"Sorry, you have already claimed the 3.5 account.");
+            throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "Sorry, you have already claimed the 3.5 account.");
         }
+        Result md51 = bindAccount35(ipAddress, md5);
+        if (md51 != null) return md51;
+        throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "Sorry, there is no 3.5 account available at the moment. Please contact the administrator.");
+    }
+
+    private Result bindAccount35(String ipAddress, String md5) {
         //如果没有，那么要绑定一个账号3.5
         LambdaQueryWrapper<GptAccount> newWrapper = Wrappers.lambdaQuery();
         newWrapper.eq(GptAccount::getAccountType, type3).last(" order by create_time desc limit 1 ");
         GptAccount newGptAccount = gptAccountService.getOne(newWrapper);
         //有这个号并且，这个号没有被领取过
-        if (ObjectUtil.isNotEmpty(newGptAccount)&&ObjectUtil.isEmpty(newGptAccount.getToken())) {
+        if (ObjectUtil.isNotEmpty(newGptAccount) && ObjectUtil.isEmpty(newGptAccount.getToken())) {
             newGptAccount.setUpdateBy(ipAddress);
             newGptAccount.setUpdateTime(new Date());
             newGptAccount.setToken(md5);
             gptAccountService.updateById(newGptAccount);
+            log.info("bindAccount35:{}",newGptAccount);
             return Result.success(md5);
         }
-        throw  new ServiceException(ErrorCodeEnum.ERROR.getCode(),"Sorry, there is no 3.5 account available at the moment. Please contact the administrator.");
+        return null;
     }
 
     /**
@@ -78,9 +88,10 @@ public class AccountController {
             conversion.setEmailPwd(null);
             one.setSendFlag(1);//已发送
             gptAccountService.updateById(one);
+            log.info("sendAccount3.5:{}",one);
             return Result.success(conversion);
         }
-        throw  new ServiceException(ErrorCodeEnum.ERROR.getCode(),"No matching 3.5 account.");
+        throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "No matching 3.5 account.");
     }
 
     /**
@@ -91,12 +102,15 @@ public class AccountController {
      */
     @PostMapping("/receive/4.0account")
     @ResponseBody
-    public Result<String> receiveAccount(@Param("accountName") String accountName, @Param("accountPwd") String accountPwd
+    public Result<String> receiveAccount(HttpServletRequest request, @Param("accountName") String accountName, @Param("accountPwd") String accountPwd
             , @Param("loginLocation") String loginLocation, @Param("cardNum") String cardNum, @Param("token") String token) {
 
+        String accountNameTrim = accountName.trim();
+        String cardNumTrim = cardNum.trim();
+        String loginLocationTirm = loginLocation.trim();
         //根据token查询
         LambdaQueryWrapper<GptAccount> gptAccountLambdaQueryWrapper = Wrappers.lambdaQuery();
-        gptAccountLambdaQueryWrapper.eq(GptAccount::getAccountName, accountName)
+        gptAccountLambdaQueryWrapper.eq(GptAccount::getAccountName, accountNameTrim)
                 .eq(GptAccount::getDelFlag, 0).eq(GptAccount::getAccountType, type3);
         GptAccount one = gptAccountService.getOne(gptAccountLambdaQueryWrapper);
         if (ObjectUtil.isNotEmpty(one)) {
@@ -105,13 +119,15 @@ public class AccountController {
             one.setVerification(0);//0.未校验是4.0   1.已校验    目前需要人工验证是否是4.0
             one.setUpdateTime(new Date());
             one.setUpdateBy(token);
-            one.setLoginLocation(loginLocation);
-            one.setCardNum(cardNum);
+            one.setLoginLocation(loginLocationTirm);
+            one.setCardNum(cardNumTrim);
             one.setToken(null);//4.0回收过后3.5又可以领取
             gptAccountService.updateById(one);
+            bindAccount35(getIpAddress(request),  token);
+            log.info("receiveAccount4.0:{}",one);
             return Result.success("Recycling successful, we will verify the 4.0 account and make payment to you in one hour.");
         }
-        throw  new ServiceException(ErrorCodeEnum.ERROR.getCode(),"Recycling failed, no valid account found.. Please contact the administrator.");
+        throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "Recycling failed, no valid account found.. Please contact the administrator.");
     }
 
 

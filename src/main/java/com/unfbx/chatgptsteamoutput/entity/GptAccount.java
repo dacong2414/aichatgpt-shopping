@@ -1,5 +1,7 @@
 package com.unfbx.chatgptsteamoutput.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldStrategy;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
@@ -41,6 +43,7 @@ public class GptAccount implements Serializable {
     private Date updateTime;
     private String createBy;
     private String updateBy;
+    @TableField(updateStrategy = FieldStrategy.IGNORED)
     private String token;
     private String loginLocation;//充值登录国家
     private String cardNum;//卡号
