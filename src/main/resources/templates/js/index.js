@@ -15,6 +15,8 @@ var utils = {
         if (res.code == 200) {
           $('.account-3').html(res.data.accountName)
           $('.pwd-3').html(res.data.accountPwd)
+        }else {
+          $('.error-msg35').html(res.message)
         }
       }
     })
