@@ -54,7 +54,7 @@ public class AccountController {
     private Result bindAccount35(String ipAddress, String md5) {
         //如果没有，那么要绑定一个账号3.5
         LambdaQueryWrapper<GptAccount> newWrapper = Wrappers.lambdaQuery();
-        newWrapper.eq(GptAccount::getAccountType, type3).last(" order by create_time desc limit 1 ");
+        newWrapper.eq(GptAccount::getAccountType, type3).last(" and token is null order by create_time desc limit 1 ");
         GptAccount newGptAccount = gptAccountService.getOne(newWrapper);
         //有这个号并且，这个号没有被领取过
         if (ObjectUtil.isNotEmpty(newGptAccount) && ObjectUtil.isEmpty(newGptAccount.getToken())) {
