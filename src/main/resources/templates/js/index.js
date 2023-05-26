@@ -79,6 +79,9 @@ var utils = {
           localStorage.setItem("token", res.data)
           _this.token = res.data
         }
+        if (res.code== 500 ){
+           alert(res.message);
+        }
       }
     })
   }
