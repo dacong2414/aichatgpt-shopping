@@ -130,6 +130,18 @@ public class AccountController {
         throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "Recycling failed, no valid account found.. Please contact the administrator.");
     }
 
+    @PostMapping("/add/account35")
+    @ResponseBody
+    public Result<GptAccount> addAccount35(@RequestBody GptAccountDTO gptAccountDTO) {
+
+        GptAccount gptAccount = BeanUtil.conversion(gptAccountDTO, GptAccount.class);
+        gptAccount.setId(PkUtil.getId());
+        gptAccount.setCreateTime(new Date());
+        gptAccount.setCreateBy("system");
+        gptAccountService.save(gptAccount);
+        return Result.success(gptAccount);
+    }
+
 
     public static String getIpAddress(HttpServletRequest request) {
         String ip = request.getHeader("x-forwarded-for");
