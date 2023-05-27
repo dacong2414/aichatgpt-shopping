@@ -221,3 +221,9 @@ body {
   text-align: center;
   margin-top: 10px;
 }
+
+.error-msgTishi{
+  color: red;
+  text-align: center;
+  margin-top: 10px;
+}

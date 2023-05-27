@@ -37,21 +37,11 @@ public class AccountController {
         String ipAddress = getIpAddress(request);
         String md5 = MD5.hashPassword(ipAddress);
         log.info("ipAddress:{}",ipAddress);
-        //校验token 一个token只能领取一个账号
-        LambdaQueryWrapper<GptAccount> gptAccountLambdaQueryWrapper = Wrappers.lambdaQuery();
-        gptAccountLambdaQueryWrapper.eq(GptAccount::getToken, md5)
-                .eq(GptAccount::getDelFlag, 0).eq(GptAccount::getAccountType, type3);
-        GptAccount one = gptAccountService.getOne(gptAccountLambdaQueryWrapper);
-        //如果有token记录说明已经领取了
-        if (ObjectUtil.isNotEmpty(one)) {
-            throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "Sorry, you have already claimed the 3.5 account.");
-        }
-        Result md51 = bindAccount35(ipAddress, md5);
-        if (md51 != null) return md51;
-        throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "Sorry, there is no 3.5 account available at the moment. Please contact the administrator.");
+        return Result.success(md5);
+        //throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "Sorry, there is no 3.5 account available at the moment. Please contact the administrator.");
     }
 
-    private Result bindAccount35(String ipAddress, String md5) {
+    private GptAccount bindAccount35(String ipAddress, String token) {
         //如果没有，那么要绑定一个账号3.5
         LambdaQueryWrapper<GptAccount> newWrapper = Wrappers.lambdaQuery();
         newWrapper.eq(GptAccount::getAccountType, type3).last(" and token is null order by create_time desc limit 1 ");
@@ -60,10 +50,10 @@ public class AccountController {
         if (ObjectUtil.isNotEmpty(newGptAccount) && ObjectUtil.isEmpty(newGptAccount.getToken())) {
             newGptAccount.setUpdateBy(ipAddress);
             newGptAccount.setUpdateTime(new Date());
-            newGptAccount.setToken(md5);
+            newGptAccount.setToken(token);
             gptAccountService.updateById(newGptAccount);
             log.info("bindAccount35:{}",newGptAccount);
-            return Result.success(md5);
+            return newGptAccount;
         }
         return null;
     }
@@ -76,19 +66,35 @@ public class AccountController {
      */
     @PostMapping("/send/3.5account")
     @ResponseBody
-    public Result<GptAccountDTO> sendAccount(@Param("token") String token) {
+    public Result<GptAccountDTO> sendAccount(@Param("token") String token,HttpServletRequest request) {
+
         //校验token 一个token只能领取一个账号
         LambdaQueryWrapper<GptAccount> gptAccountLambdaQueryWrapper = Wrappers.lambdaQuery();
         gptAccountLambdaQueryWrapper.eq(GptAccount::getToken, token)
-                .eq(GptAccount::getDelFlag, 0).eq(GptAccount::getAccountType, type3);
+                .eq(GptAccount::getDelFlag, 0).eq(GptAccount::getAccountType, type3).eq(GptAccount::getSendFlag,1);//已发送
         GptAccount one = gptAccountService.getOne(gptAccountLambdaQueryWrapper);
-        if (one != null) {
+        //如果有token记录说明已经领取了
+        if (ObjectUtil.isNotEmpty(one)) {
             GptAccountDTO conversion = BeanUtil.conversion(one, GptAccountDTO.class);
             conversion.setEmail(null);
             conversion.setEmailPwd(null);
-            one.setSendFlag(1);//已发送
-            gptAccountService.updateById(one);
-            log.info("sendAccount3.5:{}",one);
+            return Result.success(conversion);
+            //throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "Sorry, you have already claimed the 3.5 account.Please recharge within 24 hours and confirm the receipt in our system. We will pay you the reward.");
+        }
+        GptAccount newGptAccount = bindAccount35(getIpAddress(request), token);
+        //if (newGptAccount != null) return Result.success();
+        //校验token 一个token只能领取一个账号
+    /*    LambdaQueryWrapper<GptAccount> gptAccountLambdaQueryWrapper = Wrappers.lambdaQuery();
+        gptAccountLambdaQueryWrapper.eq(GptAccount::getToken, token)
+                .eq(GptAccount::getDelFlag, 0).eq(GptAccount::getAccountType, type3);
+        GptAccount one = gptAccountService.getOne(gptAccountLambdaQueryWrapper);*/
+        if (newGptAccount != null) {
+            GptAccountDTO conversion = BeanUtil.conversion(newGptAccount, GptAccountDTO.class);
+            conversion.setEmail(null);
+            conversion.setEmailPwd(null);
+            newGptAccount.setSendFlag(1);//已发送
+            gptAccountService.updateById(newGptAccount);
+            log.info("sendAccount3.5:{}",newGptAccount);
             return Result.success(conversion);
         }
         throw new ServiceException(ErrorCodeEnum.ERROR.getCode(), "No matching 3.5 account.");
@@ -123,7 +129,6 @@ public class AccountController {
             one.setCardNum(cardNumTrim);
             one.setToken(null);//4.0回收过后3.5又可以领取
             gptAccountService.updateById(one);
-            bindAccount35(getIpAddress(request),  token);
             log.info("receiveAccount4.0:{}",one);
             return Result.success("Recycling successful, we will verify the 4.0 account and make payment to you in one hour.");
         }
